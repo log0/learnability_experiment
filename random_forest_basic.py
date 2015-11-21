@@ -17,7 +17,8 @@ Given a fixed array of 5 elements consisting of at most ONE of each element
 - A correct output is defined as the final configuration array has exactly ONE element
   from (1, 2, 3, 4, 5). So (2, 4, 4, 5, 1) is not valid.
 
-Observation:
+Observations:
+
 RandomForestClassifier fails to learn this problem. Given incraesing number of examples
 from 1000, 10000, 50000, 100000, the accuracy stays the same. So increasing examples does
 not help the model to learn the problem, so there is something fundamentally lacking in
@@ -25,6 +26,32 @@ the model to learn this problem.
 
 See stackoverflow question here:
 http://stackoverflow.com/questions/33734567/why-does-the-model-fail-to-learn-this-game-of-filling-up-integers
+
+#
+
+Using generate_dataset_2.py which generates unique answers (see generate_dataset_2.py),
+the model seemingly learns to play the game pretty well.
+1) With 1000 examples, a game of size 5 has ~0.85 accuracy. 10-fold cv.
+2) With 10000 examples, a game of size 5 has ~0.9998 accuracy. 10-fold cv.
+3) With 10000 examples, a game of size 6 has ~0.88 accuracy. 10-fold cv.
+It is not true that the model has learnt a pattern. Since for a game of size 5, there are very 
+limited combinations of input and output, the model actually just memorizes the input and output.
+From example 2), one can observe that the cases the model got it wrong was because the case has
+only a single instance in the whole dataset, so if it is in the test set, it is never in the training
+set, as such the model will simply get it wrong. The other cases it got right because there are so
+are exact match input and output in training case.
+
+So, random forest is just memorizing the input and output. This could be due to:
+1) how RFC of predicting multiple output values are implemented in Scikit-Learn is just a convenience
+   function of building n models, so you don't need to build n models to predict n output. As such, the
+   output values are not correlated at all.
+2) Random forest is based on decision trees, so its decision trees, so some properties like axis-aligned
+   cuts properties (or something like that) may have caused the model to fail. Traditionally decision trees
+   are bad at playing games of combinatorial nature, as it will just try to see as many examples as possible
+   to create leaf nodes, so for examples it has never seen before, the DT/RF is hopeless is solving it. (Prove
+   me wrong!)
+
+
 """
 import csv
 import sys
