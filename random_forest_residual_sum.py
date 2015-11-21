@@ -6,25 +6,12 @@ Given a fixed array of 5 elements consisting of at most ONE of each element
  from (1, 2, 3, 4, 5) and ONE OR MORE (0), replace the 0s with appropriate values so 
  that the final array has exactly ONE of each (1, 2, 3, 4, 5).
 
-- Generate N examples of combinations configurations with elements of [1, 2, 3, 4, 5]
-  as answers, and randomly replace some of the elements as 0s.
-- For instance, one training example is [(0, 3, 5, 4, 0), (2, 3, 5, 4, 1)].
-- There can be multiple same input mapping to different output, i.e. [(0, 3, 5, 4, 0),
-  (2, 3, 5, 4, 1)] and [(0, 3, 5, 4, 0), (1, 3, 5, 4, 2)] can be both present as two
-  separate training instances.
-- Separate the training data set 10 fold, shuffled, and train using a
-  RandomForestClassifier from Scikit-Learn.
-- A correct output is defined as the final configuration array has exactly ONE element
-  from (1, 2, 3, 4, 5). So (2, 4, 4, 5, 1) is not valid.
+This is the second attempt, I generated a feature that represents the residual value to
+fill in. That is, if [3, 4, 5, 0, 0] is provided, then the remaining residual is 3. This
+is an attempt to provide the model some higher level feature and see if it learn take
+this hint and learn the program better.
 
-Observation:
-RandomForestClassifier fails to learn this problem. Given incraesing number of examples
-from 1000, 10000, 50000, 100000, the accuracy stays the same. So increasing examples does
-not help the model to learn the problem, so there is something fundamentally lacking in
-the model to learn this problem.
-
-See stackoverflow question here:
-http://stackoverflow.com/questions/33734567/why-does-the-model-fail-to-learn-this-game-of-filling-up-integers
+The observation is that the model cannot learn this problem even given this feature.
 """
 import csv
 import sys
@@ -59,7 +46,11 @@ if __name__ == '__main__':
         Y.append(target_vec)
         # print '%s => %s' % (features_vec, target_vec)
     X = np.array(X)
+    sum_column = np.array([15 - np.sum(X[i, :]) for i in range(X.shape[0])]).reshape((X.shape[0], 1))
+    X = np.hstack((X, sum_column))
     Y = np.array(Y)
+    
+    print(X.shape)
 
     validity_scores = []
     for k, (train, cv) in enumerate(KFold(len(Y), n_folds = 10, shuffle = True, random_state = 144)):
